@@ -1,2 +1,6 @@
 国破れて山河在り
 草
+
+
+#include <stdio.h>
+
