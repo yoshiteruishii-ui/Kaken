@@ -1,0 +1,44 @@
+//kaken.cppのもともとのやつ
+
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include "wave.h"
+
+int main() {
+    Wave::Wavedata wave = Wave::Wavedata::load("gomi.wav");
+    if (wave.getlength() == 0) return -1;
+
+    Wave::MonoAudio mono = Wave::MonoAudio::fromWavedata(wave);
+
+    int N = 262144; // 2のべき乗
+    if (mono.getlength() < N) {
+        std::cout << "データが足りません" << std::endl;
+        return -1;
+    }
+
+    Wave::cmpnum* fft_result = new Wave::cmpnum[N];
+    
+    Wave::FFT(mono.getdata() + (int) (44100 * 0), fft_result, N);
+
+    std::ofstream ofs("fft_result.csv");
+    if (ofs) {
+        ofs << "Frequency,Magnitude" << std::endl;
+        for (int i = 0; i < N / 2; i++) {
+            double freq = (double)i * mono.getsamplerate() / N;
+            double mag = std::sqrt(fft_result[i].real * fft_result[i].real + fft_result[i].imag * fft_result[i].imag);
+            ofs << freq << "," << mag << std::endl;
+        }
+        ofs.close();
+        std::cout << "Success: fft_result.csv" << std::endl;
+    }
+
+    delete[] fft_result;
+    return 0;
+}
+
+//ある音が鳴ってから、その音が消えるまでの時間を測定し、それが消えたタイミングまで音が鳴っていると判定する。
+//全ての周波数においてこの操作を行い、測定する。
+//最大音のmagの1/10以下のmagの場合、なっていない音と判断する。最大音のmagが、全体を通した最高magの1/10以下の場合、音は鳴っていないと判断する。
+
+gomi.wav
